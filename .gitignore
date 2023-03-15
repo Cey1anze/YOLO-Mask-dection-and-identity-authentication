@@ -29,6 +29,7 @@
 storage.googleapis.com
 runs/*
 data/*
+Weights/*
 data/images/*
 !data/*.yaml
 !data/hyps
