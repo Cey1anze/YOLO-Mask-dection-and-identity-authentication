@@ -1,3 +1,5 @@
+import json
+
 import pymysql
 
 
@@ -77,6 +79,35 @@ class sqlUtils:
         db.commit()
         db.close()
         return result, now_user
+
+    @classmethod
+    # 查询用户名与其对应的人脸数据
+    def search_face_information(cls):
+        # 获取数据库连接
+        db = sqlUtils.initDB()
+        # 使用 cursor() 方法创建一个游标对象 cursor
+        cursor = db.cursor()
+        # sql语句
+        result = {}
+        with db.cursor() as cursor:
+            # 查询 user 表中的所有记录
+            sql = "SELECT username, name, photo FROM user"
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+
+            # 遍历查询结果，将数据存储到 result 字典中
+            for row in rows:
+                username, name, photo = row
+                if photo is None:
+                    photo = 'None'
+
+                # 将数据存储到 result 字典中
+                result[username] = [username, name, photo]
+
+        db.commit()
+        db.close()
+        # 将 result 字典转换为 JSON 字符串，并返回
+        return json.dumps(result)
 
 
 if __name__ == '__main__':
