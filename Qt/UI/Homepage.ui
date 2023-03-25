@@ -56,7 +56,7 @@
        <enum>Qt::AutoText</enum>
       </property>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>170</x>
@@ -170,6 +170,31 @@ padding-left:3px;
       </property>
       <property name="text">
        <string>结束检测</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="identify_compare_button">
+      <property name="geometry">
+       <rect>
+        <x>820</x>
+        <y>380</y>
+        <width>110</width>
+        <height>38</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton{
+border-radius:15px;
+font-weight:blod;
+background-color: rgb(246, 170, 101);
+}
+QPushButton:pressed{
+font-weight:blod;
+padding-top:3px;
+padding-left:3px;
+}</string>
+      </property>
+      <property name="text">
+       <string>身份识别</string>
       </property>
      </widget>
     </widget>
@@ -444,7 +469,7 @@ padding-left:3px;
 }</string>
     </property>
     <property name="text">
-     <string>程序信息</string>
+     <string>关于</string>
     </property>
    </widget>
   </widget>
