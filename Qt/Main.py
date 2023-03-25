@@ -11,7 +11,7 @@ import sys
 from sqlUtils import sqlUtils
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QTableWidgetItem, QButtonGroup, QFileDialog
 
-from EnterPoint import run_api
+from EnterPoint import run_api, identify
 
 
 class Login(QMainWindow, login.Ui_login_MainWindow):
@@ -37,11 +37,8 @@ class Login(QMainWindow, login.Ui_login_MainWindow):
 
     # 登录事件
     def login(self):
-        # todo 鉴于测试需求 这边将用户名和密码写死 最后需要修改
-        # user = self.lineEdit.text()
-        # password = self.lineEdit_2.text()
-        user = "cui"
-        password = "123"
+        user = self.lineEdit.text()
+        password = self.lineEdit_2.text()
         if user != "" and password != "":
             result, now_user = sqlUtils.Login((user, password))
             if result == 1:
@@ -98,6 +95,7 @@ class HomePage(QMainWindow, homepage.Ui_homePage_MainWindow):
     # 初始化UI
     def __init__(self):
         super(HomePage, self).__init__()
+        self.camera_opened = None
         self.tableWidgets = None
         self.init()
         self.cap = None
@@ -132,15 +130,45 @@ class HomePage(QMainWindow, homepage.Ui_homePage_MainWindow):
     # 人脸识别 开始检测槽函数
     @pyqtSlot()
     def on_identify_start_button_clicked(self):
-        self.cap = cv2.VideoCapture(0)
+        """
+        Open video input and start mask detect
+        """
+        # 使用 cv2.CAP_DSHOW 标识符可以让 VideoCapture API 使用 DirectShow API 来访问摄像头设备，从而解决一些摄像头在使用 VideoCapture 时可能遇到的问题，
+        # 例如设备驱动不稳定、分辨率设置问题等等。
+        self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         self.timer.start(30)
+        self.camera_opened = True
 
     # 人脸识别 结束检测 槽函数
     @pyqtSlot()
     def on_identify_exit_button_clicked(self):
+        """
+        Close video input
+        """
         self.timer.stop()
         self.cap.release()
         self.vedio_label.setText("Waiting open your camera...")
+
+    @pyqtSlot()
+    def on_identify_compare_button_clicked(self):
+        """
+        Compared with the face information in the database
+        """
+        if not self.camera_opened:  # 如果摄像头未打开，则返回
+            return
+        ret, frame = self.cap.read()
+        if ret:
+            retval, buffer = cv2.imencode('.jpg', frame)
+            jpg_as_text = base64.b64encode(buffer).decode('utf-8')
+
+            def get_current_user():
+                user = UserHolder.getUser()
+                username = user.username
+                return username
+            identify.main(jpg_as_text, get_current_user())
+            print(identify.main(jpg_as_text, get_current_user()))
+        else:
+            print('error')
 
     # 视频流定时更新渲染函数
     def update_frame(self):
@@ -161,7 +189,7 @@ class HomePage(QMainWindow, homepage.Ui_homePage_MainWindow):
     # 上传文件
     @pyqtSlot()
     def on_upload_img_clicked(self):
-        fileName, _ = QFileDialog.getOpenFileName(self, 'Open file', 'C:\\', 'Image files (*.jpg *.gif *.png *.jpeg)')
+        fileName, _ = QFileDialog.getOpenFileName(self, 'Open file', 'C:\\', 'Image files (*.jpg *.png *.jpeg)')
 
         if fileName:
             print(fileName)  # todo 此处参数fileName即为上传头像的本地路径
