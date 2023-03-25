@@ -155,6 +155,7 @@ class HomePage(QMainWindow, homepage.Ui_homePage_MainWindow):
         Compared with the face information in the database
         """
         if not self.camera_opened:  # 如果摄像头未打开，则返回
+            print('error')
             return
         ret, frame = self.cap.read()
         if ret:

@@ -48,43 +48,43 @@ def main(photo, now_user):
         otheruser_photo = get_otheruser_photos(now_user)
         nowUser_photo = user_json[now_user][2]
 
-        if nowUser_photo != "None":
+        if nowUser_photo != 'None':
             payload = img_data(photo, nowUser_photo)
             headers = {
                 'Content-Type': 'application/json'
             }
 
             response = requests.request("POST", url, headers=headers, data=payload)
-            print(response.text)
 
             result = response.json()
 
             if result['result']['score'] < 85:
+                if len(otheruser_photo) > 0:
+                    for i in range(1, len(otheruser_photo)):
+                        # 将第i张图片与pic1进行对比
+                        payload = img_data(photo, otheruser_photo[i])
+                        headers = {
+                            'Content-Type': 'application/json'
+                        }
 
-                for i in range(1, len(otheruser_photo)):
-                    # 将第i张图片与pic1进行对比
-                    payload = img_data(photo, otheruser_photo[i])
-                    headers = {
-                        'Content-Type': 'application/json'
-                    }
+                        response = requests.request("POST", url, headers=headers, data=payload)
 
-                    response = requests.request("POST", url, headers=headers, data=payload)
+                        result = response.json()
 
-                    result = response.json()
-
-                    if result['result']['score'] > 85:
-                        for username, [username, name, photo] in user_json.items():
-                            if photo == result['result']['score']:
-                                return str(name)
-
+                        if result['result']['score'] > 85:
+                            for username, [username, name, photo] in user_json.items():
+                                if photo == result['result']['score']:
+                                    return str(name)
                     else:
                         return str('不与数据库中任意人脸数据匹配')
+                else:
+                    return str('不与数据库中任意人脸数据匹配')
             else:
                 for username, [username, name, photo] in user_json.items():
                     if photo == nowUser_photo:
                         return str(name)
         else:
-            return str('数据库中暂无你的数据，请先录入人脸数据')
+            return str('请先录入人脸数据')
     except Exception as e:
         print(e)
 
