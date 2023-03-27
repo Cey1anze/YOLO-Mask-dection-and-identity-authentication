@@ -40,3 +40,13 @@ thop~=0.1.1-2209072238
 
 pyqt5~=5.15.9
 mysql-connector-python~=8.0.32
+pip~=23.0.1
+zlib~=1.2.13
+wheel~=0.38.4
+brotli~=1.0.9
+openssl~=1.1.1t
+cryptography~=39.0.1
+setuptools~=67.6.0
+cython~=0.29.33
+pyside6~=6.4.2
+pymysql~=1.0.2
