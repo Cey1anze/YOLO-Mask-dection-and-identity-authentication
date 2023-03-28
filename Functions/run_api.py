@@ -1,7 +1,7 @@
 import cv2
 import torch
 
-from EnterPoint import detect_api
+from Functions import detect_api
 
 cap = cv2.VideoCapture(0)  # 0
 a = detect_api.detectapi(weights='I:\BaiduNetdiskDownload\yolov7\yolov7_mask.pt')
