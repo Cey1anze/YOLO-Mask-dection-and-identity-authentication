@@ -1,6 +1,0 @@
-train: ./mask/train.txt
-val: ./mask/val.txt
-
-nc: 2
-
-names: [ 'no-mask', 'mask' ]

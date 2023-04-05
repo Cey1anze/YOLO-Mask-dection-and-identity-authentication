@@ -1,9 +1,12 @@
+import time
+
 import cv2
+import face_recognition
 import torch
 
-from Functions import detect_api
+from Functions.utils import detect_api
 
-cap = cv2.VideoCapture(0)  # 0
+cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 a = detect_api.detectapi(weights='I:\BaiduNetdiskDownload\yolov7\yolov7_mask.pt')
 
 
@@ -23,3 +26,7 @@ def run():
         """
         return img
 
+
+def release():
+    cap.release()
+    cv2.destroyAllWindows()
