@@ -5,6 +5,7 @@ import time
 
 import cv2
 import face_recognition
+from PySide6.QtCore import QObject, Signal
 
 from Qt.UserHolder import UserHolder
 from Qt.sqlUtils import sqlUtils
@@ -13,16 +14,9 @@ user_json = json.loads(sqlUtils.search_face_information())  # 原始数据库jso
 photo_list = []
 name_list = []
 decoded_photo_list = []
-
-
-def get_faces_base64_from_database():
-    photo_list.clear()
-    name_list.clear()
-    for username, data in user_json.items():
-        if data[2] is not None:
-            photo_list.append(data[2])
-            name_list.append(data[1])
-    return photo_list, name_list
+# 定义全局列表，存储识别结果
+identify_results = []
+result = None
 
 
 def auto_identify(frame):
@@ -61,7 +55,18 @@ def auto_identify(frame):
         return "数据库中无结果"
 
 
+def get_faces_base64_from_database():
+    photo_list.clear()
+    name_list.clear()
+    for username, data in user_json.items():
+        if data[2] is not None:
+            photo_list.append(data[2])
+            name_list.append(data[1])
+    return photo_list, name_list
+
+
 def main():
+    global result
     cap = cv2.VideoCapture(0)
 
     # 记录上一次执行的时间
@@ -75,14 +80,15 @@ def main():
             break
 
         # 进行人脸检测和身份认证
-        # 只在距离上次执行超过5秒时才执行
-        if time.time() - last_time >= 5:
+        # 只在距离上次执行超过3秒时才执行
+        if time.time() - last_time >= 3:
             # 转换为灰度图像
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             # 检测人脸
             faces = face_recognition.face_locations(gray)
             if len(faces) > 0:
-                print(auto_identify(frame))
+                result = auto_identify(frame)
+                identify_results.append(result)
 
             last_time = time.time()  # 更新上一次执行的时间
 

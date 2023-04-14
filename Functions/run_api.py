@@ -5,7 +5,6 @@ import face_recognition
 import torch
 
 from Functions.utils import detect_api
-
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 a = detect_api.detectapi(weights='I:\BaiduNetdiskDownload\yolov7\yolov7_mask.pt')
 
@@ -24,9 +23,5 @@ def run():
                 cv2.putText(img,names[cls],(x1,y1-20),cv2.FONT_HERSHEY_DUPLEX,1.5,(255,0,0))'''
         print()  # 将每一帧的结果输出分开
         """
+
         return img
-
-
-def release():
-    cap.release()
-    cv2.destroyAllWindows()
