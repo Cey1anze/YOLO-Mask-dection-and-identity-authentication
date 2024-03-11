@@ -1,288 +1,263 @@
-# Official YOLOv7
+# About Mask Detection and Identification
 
-Implementation of paper - [YOLOv7: Trainable bag-of-freebies sets new state-of-the-art for real-time object detectors](https://arxiv.org/abs/2207.02696)
+## 目录
 
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/yolov7-trainable-bag-of-freebies-sets-new/real-time-object-detection-on-coco)](https://paperswithcode.com/sota/real-time-object-detection-on-coco?p=yolov7-trainable-bag-of-freebies-sets-new)
-[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/akhaliq/yolov7)
-<a href="https://colab.research.google.com/gist/AlexeyAB/b769f5795e65fdab80086f6cb7940dae/yolov7detection.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
-[![arxiv.org](http://img.shields.io/badge/cs.CV-arXiv%3A2207.02696-B31B1B.svg)](https://arxiv.org/abs/2207.02696)
+- 项目运行流程
+  
+  - 登陆 / 注册
+    
+  - 摄像头检测及身份识别
+    
+  - 上传个人信息
+    
+- 项目运行原理
+  
+  - 口罩检测
+    
+    - 训练模型
+      
+      - 预训练模型
+        
+      - 正式训练
+        
+    - 使用模型进行预测
+      
+      - 基础检测
+        
+      - 摄像头实时检测
+        
+  - 身份识别
+    
+    - 人像对比
+  - 可视化界面
+    
+    - 建立连接
+
+## 项目结构
+
+```
+│ 
+├─Functions
+│  ├─utils
+│  │  └─detect_api.py
+│  ├─identify.py
+│  └─run_api.py
+├─models
+├─Qt
+│  ├─Dev
+│  │  ├─images
+│  │  │  ├─icons
+│  │  │  └─images
+│  │  ├─modules
+│  │  └─themes
+├─utils
+│  ├─aws
+│  ├─google_app_engine
+│  └─wandb_logging
+├─detect.py
+├─export.py
+├─hubconf.py
+├─main.py
+├─requirements.txt
+├─traced_model.pt
+├─train.py
+├─train_aux.py
+├─train_mask.py
+├─yolov7.pt
+└─yolov7_mask.pt
+```
+
+## 项目运行流程
+
+- 登陆 / 注册
+
+        ![](https://cdn.jsdelivr.net/gh/HYBBWuXiDiXi/Blog_Images@main/202304011325984.png)
+
+![](https://cdn.jsdelivr.net/gh/HYBBWuXiDiXi/Blog_Images@main/202304011326371.png)
+
+- 主页（Need a Main LOGO pic or something else）
+  
+  ![](https://cdn.jsdelivr.net/gh/HYBBWuXiDiXi/Blog_Images@main/202304011329363.png)
+  
+- 摄像头检测（GUI Need To Be Redesign）
+  
+  ![](https://cdn.jsdelivr.net/gh/HYBBWuXiDiXi/Blog_Images@main/202304011340765.png)
+  
+- 上传个人信息（GUI Need To Be Redesign）
+  
+  ![](https://cdn.jsdelivr.net/gh/HYBBWuXiDiXi/Blog_Images@main/202304011342685.png)
+  
+- 静态图片检测（ Maybe Will Add This Function）
+  
+
+## 项目运行原理
 
 <div align="center">
-    <a href="./">
-        <img src="./figure/performance.png" width="79%"/>
-    </a>
+<b>口罩检测</b>
 </div>
 
-## Web Demo
+#### *Yolo算法*
 
-- Integrated into [Huggingface Spaces 🤗](https://huggingface.co/spaces/akhaliq/yolov7) using Gradio. Try out the Web Demo [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/akhaliq/yolov7)
+    YOLO（You Only Look Once）是一种实时目标检测算法，它的主要思想是将目标检测问题转换为回归问题，使用单个神经网络预测图像中所有目标的边界框和类别。
 
-## Performance 
+    下面是YOLO算法的流程：
 
-MS COCO
+1. 输入图像：将待检测的图像输入神经网络，大小为 $448\times 448$。
+  
+2. 卷积神经网络：采用卷积神经网络对输入图像进行特征提取。
+  
+3. 边界框预测：将特征图分成 $S\times S$ 个网格（如 $7\times 7$），每个网格负责检测图像中的一部分区域。对于每个网格，预测 $B$ 个边界框（bounding box），每个边界框包含5个信息：$(x, y, w, h, confidence)$，其中 $(x, y)$ 表示边界框中心相对于当前网格左上角的偏移量，$(w, h)$ 表示边界框的宽和高，$confidence$ 表示该边界框包含目标的置信度。
+  
+4. 类别预测：对于每个边界框，预测目标的类别。每个边界框需要预测 $C$ 个类别的概率值，其中 $C$ 是目标类别的数量。
+  
+5. 边界框过滤：根据预测结果，过滤掉置信度低于阈值的边界框。通常阈值设置为0.5。
+  
+6. 非极大值抑制（NMS）：对于同一类别的多个边界框，采用NMS算法去除冗余的边界框，只保留重叠度最大的那个边界框。
+  
+7. 输出检测结果：将保留下来的边界框和对应的类别输出作为检测结果。
+  
 
-| Model | Test Size | AP<sup>test</sup> | AP<sub>50</sub><sup>test</sup> | AP<sub>75</sub><sup>test</sup> | batch 1 fps | batch 32 average time |
-| :-- | :-: | :-: | :-: | :-: | :-: | :-: |
-| [**YOLOv7**](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7.pt) | 640 | **51.4%** | **69.7%** | **55.9%** | 161 *fps* | 2.8 *ms* |
-| [**YOLOv7-X**](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7x.pt) | 640 | **53.1%** | **71.2%** | **57.8%** | 114 *fps* | 4.3 *ms* |
-|  |  |  |  |  |  |  |
-| [**YOLOv7-W6**](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-w6.pt) | 1280 | **54.9%** | **72.6%** | **60.1%** | 84 *fps* | 7.6 *ms* |
-| [**YOLOv7-E6**](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-e6.pt) | 1280 | **56.0%** | **73.5%** | **61.2%** | 56 *fps* | 12.3 *ms* |
-| [**YOLOv7-D6**](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-d6.pt) | 1280 | **56.6%** | **74.0%** | **61.8%** | 44 *fps* | 15.0 *ms* |
-| [**YOLOv7-E6E**](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-e6e.pt) | 1280 | **56.8%** | **74.4%** | **62.1%** | 36 *fps* | 18.7 *ms* |
+- 预训练模型
 
-## Installation
+###### 1. 为什么要训练模型？
 
-Docker environment (recommended)
-<details><summary> <b>Expand</b> </summary>
+            **训练**的目的**是**让计算机程序知道“如何进行分类”
 
-``` shell
-# create the docker container, you can change the share memory size if you have more.
-nvidia-docker run --name yolov7 -it -v your_coco_path/:/coco/ -v your_code_path/:/yolov7 --shm-size=64g nvcr.io/nvidia/pytorch:21.08-py3
+###### 2. 什么是预训练模型？
 
-# apt install required packages
-apt update
-apt install -y zip htop screen libgl1-mesa-glx
+            预训练模型是指在一个大规模数据集上训练好的模型
 
-# pip install required packages
-pip install seaborn thop
+###### 3. 为什么要预训练？
 
-# go to code folder
-cd /yolov7
-```
+            在训练YOLO时，使用预训练模型可以提高训练效率和检测精度。这是因为预训练模型已经学习了很多通用特征，比如边缘、纹理、颜色等，可以被用于 YOLO 中的特征提取。这意味着预训练模型可以更快地收敛，因为它们已经学习了通用的图像特征，而且它们可以提供更好的初始化参数，从而使模型更容易地收敛到更好的结果。
 
-</details>
+- 正式训练
+  
+  正式训练使用 Yolo 官方的预训练模型 `Yolov7.pt` ，从而使训练更高效
+  
 
-## Testing
+###### 怎么进行训练？
 
-[`yolov7.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7.pt) [`yolov7x.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7x.pt) [`yolov7-w6.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-w6.pt) [`yolov7-e6.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-e6.pt) [`yolov7-d6.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-d6.pt) [`yolov7-e6e.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-e6e.pt)
+1. 数据集准备：准备一个包含物体的图像和每个物体的标签的数据集。标签应该包括物体的类别和边界框的坐标。
+2. 网络结构设计：选择一个适合的YOLO模型，并根据需要进行修改。
+3. 模型训练：使用数据集训练YOLO模型。
 
-``` shell
-python test.py --data data/coco.yaml --img 640 --batch 32 --conf 0.001 --iou 0.65 --device 0 --weights yolov7.pt --name yolov7_640_val
-```
+**模型训练结果：**
 
-You will get the results:
+Tip : 训练结果解读 - [Click Here](https://blog.csdn.net/m0_66447617/article/details/124180032)
 
-```
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.51206
- Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.69730
- Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.55521
- Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.35247
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.55937
- Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.66693
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.38453
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.63765
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.68772
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.53766
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.73549
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.83868
-```
+> 混淆矩阵（ confusion matrix ）
 
-To measure accuracy, download [COCO-annotations for Pycocotools](http://images.cocodataset.org/annotations/annotations_trainval2017.zip) to the `./coco/annotations/instances_val2017.json`
+![](https://cdn.jsdelivr.net/gh/HYBBWuXiDiXi/Blog_Images@main/202304011415296.png)
 
-## Training
+> P_Curve
 
-Data preparation
+![](https://cdn.jsdelivr.net/gh/HYBBWuXiDiXi/Blog_Images@main/202304011420817.png)
 
-``` shell
-bash scripts/get_coco.sh
-```
+> PR_Curve
 
-* Download MS COCO dataset images ([train](http://images.cocodataset.org/zips/train2017.zip), [val](http://images.cocodataset.org/zips/val2017.zip), [test](http://images.cocodataset.org/zips/test2017.zip)) and [labels](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/coco2017labels-segments.zip). If you have previously used a different version of YOLO, we strongly recommend that you delete `train2017.cache` and `val2017.cache` files, and redownload [labels](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/coco2017labels-segments.zip) 
+![](https://cdn.jsdelivr.net/gh/HYBBWuXiDiXi/Blog_Images@main/202304011420534.png)
 
-Single GPU training
+> R_Curve
 
-``` shell
-# train p5 models
-python train.py --workers 8 --device 0 --batch-size 32 --data data/coco.yaml --img 640 640 --cfg cfg/training/yolov7.yaml --weights '' --name yolov7 --hyp data/hyp.scratch.p5.yaml
+![](https://cdn.jsdelivr.net/gh/HYBBWuXiDiXi/Blog_Images@main/202304011420394.png)
 
-# train p6 models
-python train_aux.py --workers 8 --device 0 --batch-size 16 --data data/coco.yaml --img 1280 1280 --cfg cfg/training/yolov7-w6.yaml --weights '' --name yolov7-w6 --hyp data/hyp.scratch.p6.yaml
-```
+> result
 
-Multiple GPU training
+![](https://cdn.jsdelivr.net/gh/HYBBWuXiDiXi/Blog_Images@main/202304011420460.png)
 
-``` shell
-# train p5 models
-python -m torch.distributed.launch --nproc_per_node 4 --master_port 9527 train.py --workers 8 --device 0,1,2,3 --sync-bn --batch-size 128 --data data/coco.yaml --img 640 640 --cfg cfg/training/yolov7.yaml --weights '' --name yolov7 --hyp data/hyp.scratch.p5.yaml
+> Train_batch
 
-# train p6 models
-python -m torch.distributed.launch --nproc_per_node 8 --master_port 9527 train_aux.py --workers 8 --device 0,1,2,3,4,5,6,7 --sync-bn --batch-size 128 --data data/coco.yaml --img 1280 1280 --cfg cfg/training/yolov7-w6.yaml --weights '' --name yolov7-w6 --hyp data/hyp.scratch.p6.yaml
-```
+![](https://cdn.jsdelivr.net/gh/HYBBWuXiDiXi/Blog_Images@main/202304011420442.png)
 
-## Transfer learning
+> Test_batch
 
-[`yolov7_training.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7_training.pt) [`yolov7x_training.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7x_training.pt) [`yolov7-w6_training.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-w6_training.pt) [`yolov7-e6_training.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-e6_training.pt) [`yolov7-d6_training.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-d6_training.pt) [`yolov7-e6e_training.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-e6e_training.pt)
+![](https://cdn.jsdelivr.net/gh/HYBBWuXiDiXi/Blog_Images@main/202304011423489.png)
 
-Single GPU finetuning for custom dataset
-
-``` shell
-# finetune p5 models
-python train.py --workers 8 --device 0 --batch-size 32 --data data/custom.yaml --img 640 640 --cfg cfg/training/yolov7-custom.yaml --weights 'yolov7_training.pt' --name yolov7-custom --hyp data/hyp.scratch.custom.yaml
-
-# finetune p6 models
-python train_aux.py --workers 8 --device 0 --batch-size 16 --data data/custom.yaml --img 1280 1280 --cfg cfg/training/yolov7-w6-custom.yaml --weights 'yolov7-w6_training.pt' --name yolov7-w6-custom --hyp data/hyp.scratch.custom.yaml
-```
-
-## Re-parameterization
-
-See [reparameterization.ipynb](tools/reparameterization.ipynb)
-
-## Inference
-
-On video:
-``` shell
-python detect.py --weights yolov7.pt --conf 0.25 --img-size 640 --source yourvideo.mp4
-```
-
-On image:
-``` shell
-python detect.py --weights yolov7.pt --conf 0.25 --img-size 640 --source inference/images/horses.jpg
-```
+- 使用模型进行预测
+  
+  检测过程可以分为两个步骤：网络预测和后处理。
+  
+      网络预测：
+          在网络预测阶段，YOLO将整张图片输入卷积神经网络（CNN）中，生成一个固定大小的特征图。对于每个格子，YOLO会预测出K个边界框以及这些边界框中包含的物体的概率。每个边界框包含5个参数：x、y、w、h和物体概率。其中，x和y是边界框的中心坐标，w和h是边界框的宽度和高度，物体概率表示这个边界框中是否包含物体。
+  
+      后处理：
+          在后处理阶段，YOLO首先会通过阈值过滤掉物体概率较低的边界框。然后，对于每个格子，选择物体概率最高的边界框作为该格子的检测结果，并将其与其他格子的检测结果进行非极大值抑制（NMS）操作，以去除重叠的检测结果。最后，YOLO将剩余的边界框转换为绝对坐标，并输出检测结果。
+  
+- 基础预测
+  
+  使用Yolo官方提供的 `Detect.py` 即可对一张照片进行预测
+  
+  `Detect.py` 详解：[Click Here](https://blog.csdn.net/weixin_42206075/article/details/125948887)
+  
+- 使用摄像头预测
+  
+  要在OpenCV中使用YOLO算法进行实时目标检测，需要进行以下步骤：
+  
+  1. 加载YOLO模型：使用OpenCV的dnn模块加载预先训练好的YOLO模型，并设置模型的参数和配置文件。
+    
+  2. 读取视频帧：使用OpenCV的VideoCapture模块读取视频流中的每一帧图像。
+    
+  3. 图像预处理：将读取到的图像进行预处理，例如缩放到模型需要的尺寸、归一化像素值等。
+    
+  4. 输入模型进行推理：使用OpenCV的dnn模块将预处理后的图像输入到YOLO模型中进行推理，得到目标检测结果。
+    
+  5. 处理检测结果：对于每个检测到的目标，将其位置和类别信息提取出来，并在图像中标注出来。
+    
+  6. 显示结果：将标注后的图像显示出来，可以使用OpenCV的imshow函数进行显示。
+    
+  7. 循环处理：重复执行2-6步骤，直到视频流结束。
+    
 
 <div align="center">
-    <a href="./">
-        <img src="./figure/horses_prediction.jpg" width="59%"/>
-    </a>
+<b>身份识别</b>
 </div>
 
+#### *V1.0.0*
 
-## Export
+###### 百度云人脸对比
 
-**Pytorch to CoreML (and inference on MacOS/iOS)** <a href="https://colab.research.google.com/github/WongKinYiu/yolov7/blob/main/tools/YOLOv7CoreML.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
+#### *V2.0.0*
 
-**Pytorch to ONNX with NMS (and inference)** <a href="https://colab.research.google.com/github/WongKinYiu/yolov7/blob/main/tools/YOLOv7onnx.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
-```shell
-python export.py --weights yolov7-tiny.pt --grid --end2end --simplify \
-        --topk-all 100 --iou-thres 0.65 --conf-thres 0.35 --img-size 640 640 --max-wh 640
-```
+###### Face_recognition
 
-**Pytorch to TensorRT with NMS (and inference)** <a href="https://colab.research.google.com/github/WongKinYiu/yolov7/blob/main/tools/YOLOv7trt.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
+Face_recognition 详解 - [Click Here](https://zhuanlan.zhihu.com/p/99927894)
 
-```shell
-wget https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-tiny.pt
-python export.py --weights ./yolov7-tiny.pt --grid --end2end --simplify --topk-all 100 --iou-thres 0.65 --conf-thres 0.35 --img-size 640 640
-git clone https://github.com/Linaom1214/tensorrt-python.git
-python ./tensorrt-python/export.py -o yolov7-tiny.onnx -e yolov7-tiny-nms.trt -p fp16
-```
+###### 如何进行身份识别？
 
-**Pytorch to TensorRT another way** <a href="https://colab.research.google.com/gist/AlexeyAB/fcb47ae544cf284eb24d8ad8e880d45c/yolov7trtlinaom.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a> <details><summary> <b>Expand</b> </summary>
-
-
-```shell
-wget https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-tiny.pt
-python export.py --weights yolov7-tiny.pt --grid --include-nms
-git clone https://github.com/Linaom1214/tensorrt-python.git
-python ./tensorrt-python/export.py -o yolov7-tiny.onnx -e yolov7-tiny-nms.trt -p fp16
-
-# Or use trtexec to convert ONNX to TensorRT engine
-/usr/src/tensorrt/bin/trtexec --onnx=yolov7-tiny.onnx --saveEngine=yolov7-tiny-nms.trt --fp16
-```
-
-</details>
-
-Tested with: Python 3.7.13, Pytorch 1.12.0+cu113
-
-## Pose estimation
-
-[`code`](https://github.com/WongKinYiu/yolov7/tree/pose) [`yolov7-w6-pose.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-w6-pose.pt)
-
-See [keypoint.ipynb](https://github.com/WongKinYiu/yolov7/blob/main/tools/keypoint.ipynb).
+- V1.0.0
+  
+  点击 `身份识别` 按钮，程序截取实时图像，调用百度云人脸识别接口，与数据库中存在的人脸信息进行对比
+  
+- V2.0.0
+  
+  每隔一段时间截取实时图像，使用face_recongition，与数据库中存在的人脸信息进行对比
+  
 
 <div align="center">
-    <a href="./">
-        <img src="./figure/pose.png" width="39%"/>
-    </a>
+<b>可视化界面</b>
 </div>
 
+#### 什么是Pyside6？
 
-## Instance segmentation
+    Pyside6是一个用于Python编程语言的GUI（图形用户界面）工具包，它基于Qt软件开发框架，可用于创建跨平台的桌面应用程序。Pyside6支持各种GUI元素，如按钮、文本框、标签、列表、菜单等等。
 
-[`code`](https://github.com/WongKinYiu/yolov7/tree/mask) [`yolov7-mask.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-mask.pt)
+#### 怎么将可视化界面与项目的功能联系起来？
 
-See [instance.ipynb](https://github.com/WongKinYiu/yolov7/blob/main/tools/instance.ipynb).
+    要将GUI与功能代码连接起来，可以使用信号和槽机制。信号是GUI元素发出的事件，例如按钮被点击、复选框状态更改等。槽是处理信号的函数，例如响应按钮点击事件的函数。
 
-<div align="center">
-    <a href="./">
-        <img src="./figure/mask.png" width="59%"/>
-    </a>
-</div>
+#### 什么是信号和槽机制？
 
-## Instance segmentation
+    信号和槽机制是一种用于在Qt和PySide6等GUI框架中连接用户界面（UI）元素和相关功能代码的方法。
 
-[`code`](https://github.com/WongKinYiu/yolov7/tree/u7/seg) [`yolov7-seg.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-seg.pt)
+    在这种机制中，UI元素（例如按钮）发出信号（例如按钮点击事件），而功能代码则包含一个或多个槽（即信号的接收器）来处理这些信号。当UI元素发出信号时，它们将被传递到相应的槽，槽将执行相关的功能代码。
 
-YOLOv7 for instance segmentation (YOLOR + YOLOv5 + YOLACT)
+    信号和槽机制的优点在于，它可以将UI和相关的功能代码分离开来，使得应用程序更易于维护和扩展。此外，由于信号和槽是完全松耦合的，因此可以在应用程序中使用它们进行高度灵活的事件处理。
 
-| Model | Test Size | AP<sup>box</sup> | AP<sub>50</sub><sup>box</sup> | AP<sub>75</sub><sup>box</sup> | AP<sup>mask</sup> | AP<sub>50</sub><sup>mask</sup> | AP<sub>75</sub><sup>mask</sup> |
-| :-- | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-| **YOLOv7-seg** | 640 | **51.4%** | **69.4%** | **55.8%** | **41.5%** | **65.5%** | **43.7%** |
-
-## Anchor free detection head
-
-[`code`](https://github.com/WongKinYiu/yolov7/tree/u6) [`yolov7-u6.pt`](https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7-u6.pt)
-
-YOLOv7 with decoupled TAL head (YOLOR + YOLOv5 + YOLOv6)
-
-| Model | Test Size | AP<sup>val</sup> | AP<sub>50</sub><sup>val</sup> | AP<sub>75</sub><sup>val</sup> |
-| :-- | :-: | :-: | :-: | :-: |
-| **YOLOv7-u6** | 640 | **52.6%** | **69.7%** | **57.3%** |
-
-
-## Citation
+    在PySide6中，可以使用QObject.connect()方法将信号与槽连接起来。在连接过程中，可以指定信号和槽的参数列表，以确保它们具有相同的参数和返回值类型。此外，可以使用disconnect()方法来解除信号和槽的连接。
 
 ```
-@article{wang2022yolov7,
-  title={{YOLOv7}: Trainable bag-of-freebies sets new state-of-the-art for real-time object detectors},
-  author={Wang, Chien-Yao and Bochkovskiy, Alexey and Liao, Hong-Yuan Mark},
-  journal={arXiv preprint arXiv:2207.02696},
-  year={2022}
-}
+button.clicked.connect(myFunction)
 ```
 
-```
-@article{wang2022designing,
-  title={Designing Network Design Strategies Through Gradient Path Analysis},
-  author={Wang, Chien-Yao and Liao, Hong-Yuan Mark and Yeh, I-Hau},
-  journal={arXiv preprint arXiv:2211.04800},
-  year={2022}
-}
-```
-
-
-## Teaser
-
-Yolov7-semantic & YOLOv7-panoptic & YOLOv7-caption
-
-<div align="center">
-    <a href="./">
-        <img src="./figure/tennis.jpg" width="24%"/>
-    </a>
-    <a href="./">
-        <img src="./figure/tennis_semantic.jpg" width="24%"/>
-    </a>
-    <a href="./">
-        <img src="./figure/tennis_panoptic.png" width="24%"/>
-    </a>
-    <a href="./">
-        <img src="./figure/tennis_caption.png" width="24%"/>
-    </a>
-</div>
-
-
-## Acknowledgements
-
-<details><summary> <b>Expand</b> </summary>
-
-* [https://github.com/AlexeyAB/darknet](https://github.com/AlexeyAB/darknet)
-* [https://github.com/WongKinYiu/yolor](https://github.com/WongKinYiu/yolor)
-* [https://github.com/WongKinYiu/PyTorch_YOLOv4](https://github.com/WongKinYiu/PyTorch_YOLOv4)
-* [https://github.com/WongKinYiu/ScaledYOLOv4](https://github.com/WongKinYiu/ScaledYOLOv4)
-* [https://github.com/Megvii-BaseDetection/YOLOX](https://github.com/Megvii-BaseDetection/YOLOX)
-* [https://github.com/ultralytics/yolov3](https://github.com/ultralytics/yolov3)
-* [https://github.com/ultralytics/yolov5](https://github.com/ultralytics/yolov5)
-* [https://github.com/DingXiaoH/RepVGG](https://github.com/DingXiaoH/RepVGG)
-* [https://github.com/JUGGHM/OREPA_CVPR2022](https://github.com/JUGGHM/OREPA_CVPR2022)
-* [https://github.com/TexasInstruments/edgeai-yolov5/tree/yolo-pose](https://github.com/TexasInstruments/edgeai-yolov5/tree/yolo-pose)
-
-</details>
+    在这个例子中，button是一个QPushButton对象，clicked是一个信号，myFunction是一个处理函数。当按钮被点击时，clicked信号将触发myFunction函数的执行。
